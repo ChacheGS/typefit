@@ -9,14 +9,14 @@ def test_enum():
     class Color(Enum):
         RED = 1
         GREEN = 2
-        BLUE = 'blue'
+        BLUE = "blue"
 
     assert typefit(Color, 1) == Color.RED
     assert typefit(Color, 2) == Color.GREEN
-    assert typefit(Color, 'blue') == Color.BLUE
+    assert typefit(Color, "blue") == Color.BLUE
 
     with raises(ValueError):
         typefit(Color, 4)
 
     with raises(ValueError):
-        typefit(Color, 'string')
+        typefit(Color, "string")

@@ -1,32 +1,37 @@
+from typing import NamedTuple, Union
+
+from pytest import raises
+
+from typefit import typefit
+from typefit.fitting import _handle_literal
+
 try:
-    from typing import Literal, NamedTuple, Union
+    from typing import Literal
 except ImportError:
-    pass
-else:
-    from typefit.fitting import _handle_literal
-    from typefit import typefit
-    from pytest import raises
+    from typefit.compat import Literal
 
-    def test_handle_literal():
-        t = Literal["a", "b", "c"]
-        assert _handle_literal(t, "a") == "a"
-        assert _handle_literal(t, "b") == "b"
-        assert _handle_literal(t, "c") == "c"
 
-        with raises(ValueError):
-            _handle_literal(t, "d")
+def test_handle_literal():
+    t = Literal["a", "b", "c"]
+    assert _handle_literal(t, "a") == "a"
+    assert _handle_literal(t, "b") == "b"
+    assert _handle_literal(t, "c") == "c"
 
-    def test_typefit():
-        class A(NamedTuple):
-            type: Literal["a"]
+    with raises(ValueError):
+        _handle_literal(t, "d")
 
-        class B(NamedTuple):
-            type: Literal["b"]
 
-        T = Union[A, B]
+def test_typefit():
+    class A(NamedTuple):
+        type: Literal["a"]
 
-        assert isinstance(typefit(T, {"type": "a"}), A)
-        assert isinstance(typefit(T, {"type": "b"}), B)
+    class B(NamedTuple):
+        type: Literal["b"]
 
-        with raises(ValueError):
-            typefit(T, {"type": "c"})
+    T = Union[A, B]
+
+    assert isinstance(typefit(T, {"type": "a"}), A)
+    assert isinstance(typefit(T, {"type": "b"}), B)
+
+    with raises(ValueError):
+        typefit(T, {"type": "c"})

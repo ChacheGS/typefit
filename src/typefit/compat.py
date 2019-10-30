@@ -56,3 +56,99 @@ except ImportError:
                 res = (list(res[:-1]), res[-1])
             return res
         return ()
+
+
+try:
+    from typing import Literal  # lgtm[py/unused-import]
+except ImportError:
+    # noinspection PyProtectedMember
+    from typing import (
+        _tp_cache,
+        _Final,
+        _Immutable,
+        _type_check,
+        _remove_dups_flatten,
+        Union,
+    )
+
+    class _SpecialForm(_Final, _Immutable, _root=True):
+        """Internal indicator of special typing constructs.
+        See _doc instance attribute for specific docs.
+        """
+
+        __slots__ = ("_name", "_doc")
+
+        def __new__(cls, *args, **kwds):
+            """Constructor.
+
+            This only exists to give a better error message in case
+            someone tries to subclass a special typing object (not a good idea).
+            """
+            if (
+                len(args) == 3
+                and isinstance(args[0], str)
+                and isinstance(args[1], tuple)
+            ):
+                # Close enough.
+                raise TypeError(f"Cannot subclass {cls!r}")
+            return super().__new__(cls)
+
+        def __init__(self, name, doc):
+            self._name = name
+            self._doc = doc
+
+        def __eq__(self, other):
+            if not isinstance(other, _SpecialForm):
+                return NotImplemented
+            return self._name == other._name
+
+        def __hash__(self):
+            return hash((self._name,))
+
+        def __repr__(self):
+            return "typing." + self._name
+
+        def __reduce__(self):
+            return self._name
+
+        def __call__(self, *args, **kwds):
+            raise TypeError(f"Cannot instantiate {self!r}")
+
+        def __instancecheck__(self, obj):
+            raise TypeError(f"{self} cannot be used with isinstance()")
+
+        def __subclasscheck__(self, cls):
+            raise TypeError(f"{self} cannot be used with issubclass()")
+
+        @_tp_cache
+        def __getitem__(self, parameters):
+            if self._name == "Literal":
+                # There is no '_type_check' call because arguments to Literal[...] are
+                # values, not types.
+                return _GenericAlias(self, parameters)
+            raise TypeError(f"{self} is not subscriptable")
+
+    # noinspection PyArgumentList
+    Literal = _SpecialForm(
+        "Literal",
+        doc="""Special typing form to define literal types (a.k.a. value types).
+
+            This form can be used to indicate to type checkers that the corresponding
+            variable or function parameter has a value equivalent to the provided
+            literal (or one of several literals):
+        
+              def validate_simple(data: Any) -> Literal[True]:  # always returns True
+                  ...
+        
+              MODE = Literal['r', 'rb', 'w', 'wb']
+              def open_helper(file: str, mode: MODE) -> str:
+                  ...
+        
+              open_helper('/some/path', 'r')  # Passes type check
+              open_helper('/other/path', 'typo')  # Error in type checker
+        
+           Literal[...] cannot be subclassed. At runtime, an arbitrary value
+           is allowed as type argument to Literal[...], but type checkers may
+           impose restrictions.
+        """,
+    )

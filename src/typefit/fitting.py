@@ -3,7 +3,7 @@ from enum import Enum
 from inspect import isclass
 from typing import Any, Callable, List, Type, TypeVar, Union, get_type_hints
 
-from .compat import get_args, get_origin
+from .compat import Literal, get_args, get_origin
 from .utils import get_single_param
 
 T = TypeVar("T")
@@ -174,29 +174,24 @@ def _handle_none(t: Type[T], value: Any) -> T:
     return None
 
 
-try:
-    from typing import Literal
-except ImportError:
-    pass
-else:
-    def _handle_literal(t: Type[T], value: Any) -> T:
-        """
-        The Literal type allows to specify static values. All specified values
-        will be compared to the current value and if one is found to be equal
-        then the value is returned, otherwise a ValueError is raised.
+def _handle_literal(t: Type[T], value: Any) -> T:
+    """
+    The Literal type allows to specify static values. All specified values
+    will be compared to the current value and if one is found to be equal
+    then the value is returned, otherwise a ValueError is raised.
 
-        This is hidden in an exception clause for compatibility with previous
-        Python versions that don't have this feature.
-        """
+    This is hidden in an exception clause for compatibility with previous
+    Python versions that don't have this feature.
+    """
 
-        if get_origin(t) is not Literal:
-            raise ValueError
-
-        for literal in get_args(t):
-            if literal == value:
-                return value
-
+    if get_origin(t) is not Literal:
         raise ValueError
+
+    for literal in get_args(t):
+        if literal == value:
+            return value
+
+    raise ValueError
 
 
 def _handle_enum(t: Type[T], value: Any) -> T:
@@ -249,7 +244,7 @@ def typefit(t: Type[T], value: Any) -> T:
           - :class:`typing.Union` to define several possible types
           - :class:`typing.List` to declare a list and the type of list values
           - :class:`typing.Literal` to declare a list of static values allowed
-            (only in Python 3.8+)
+            (only in Python 3.8+ natively, or through compat module)
     value
         Value to be fit into the type
 
