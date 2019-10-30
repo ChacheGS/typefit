@@ -59,9 +59,9 @@ except ImportError:
 
 
 try:
-    from typing import Literal  # lgtm[py/unused-import]
+    from typing import Literal  # noqa
 except ImportError:
-    # noinspection PyProtectedMember
+    # noinspection PyProtectedMember,PyUnresolvedReferences
     from typing import (
         _tp_cache,
         _Final,
@@ -69,7 +69,7 @@ except ImportError:
         _type_check,
         _remove_dups_flatten,
         Union,
-    )
+    )  # noqa
 
     class _SpecialForm(_Final, _Immutable, _root=True):
         """Internal indicator of special typing constructs.
