@@ -1,7 +1,7 @@
 [tool.poetry]
 
 name = "typefit"
-version = "0.5.5"
+version = "1.0.0"
 
 description = "Fits JSON values into Python type-anotated objects"
 license = "WTFPL"
@@ -23,7 +23,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-pendulum = "<3.0.0"
+pendulum = "^3.0.0"
 httpx = ">=0.22,<2.0.0"
 pygments = "<3.0.0"
 
